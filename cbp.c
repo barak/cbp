@@ -77,7 +77,7 @@ char *must_malloc(l)
   char *p = malloc(l);
   if (p==NULL)
     {
-      fprintf(stderr, "Failed to allocate %d bytes.\n", l);
+      fprintf(stderr, "Failed to allocate %ld bytes.\n", l);
       abort();
       exit(1);
     }
@@ -94,7 +94,7 @@ char *must_realloc(p,l)
   p = realloc(p,l);
   if (p==NULL)
     {
-      fprintf(stderr, "Failed to reallocate %d bytes.\n", l);
+      fprintf(stderr, "Failed to reallocate %ld bytes.\n", l);
       exit(1);
     }
   return p;
@@ -214,7 +214,9 @@ void read_filename(s)
 
 #define CREAL		CDOUBLE
 #define CICREAL		CICDOUBLE
+#ifndef INFINITY
 #define INFINITY	Huge	/* was HUGE until that generated an error. */
+#endif
 
 #else
 
@@ -448,13 +450,6 @@ int total_ticks, allocated_ticks;
 
 
 
-
-#include <RANDOM.h>
-
-
-
-
-
 CINT(s_epoch, epoch, 0, MAX_COOL_INT, "current epoch number");
 CINT(s_batchsize, batchsize, -MAX_COOL_INT, MAX_COOL_INT, "patterns per batch, 0=all, negative=random");
 CINT(s_online_pat_num, online_pat_num, 0, MAX_COOL_INT, "next online pattern");
@@ -644,11 +639,7 @@ void pwd_cmd(arglist)
      char *arglist;
 {
   char buff[MAXPATHLEN+1];
-#ifdef __hpux
   printf("%s\n", getcwd(buff, MAXPATHLEN+1));
-#else
-  printf("%s\n", getwd(buff));
-#endif
 }
 
 
@@ -712,7 +703,7 @@ bool read_env_line(fd, p)
 
 	  if (!outy && char_p(fd, '*'))
 	    r = DONTCARE;
-	  else if (fscanf(fd, "%F", &r) != 1)
+	  else if (fscanf(fd, "%lf", &r) != 1)
 	    {
 	      fprintf(stderr, "Error reading value %d", j);
 	      return false;
@@ -740,7 +731,7 @@ bool read_env_line(fd, p)
 	{
 	  if (char_p(fd, '*'))
 	    r = DONTCARE;
-	  else if (fscanf(fd, "%F", &r) != 1)
+	  else if (fscanf(fd, "%lf", &r) != 1)
 	    {
 	      fprintf(stderr, "Error reading value %d", j);
 	      return false;
@@ -873,7 +864,7 @@ void read_env(file)
   envs_array[0] = temp_env;
 
   for (i=1; i<env_steps-1; i++)
-    if (!read_by_pattern(fd, " t=%F\n", &r) ||
+    if (!read_by_pattern(fd, " t=%lf\n", &r) ||
 	(envs_array[i] = read_environment(fd, patt_count)) == NULL)
       return;
     else
@@ -935,7 +926,7 @@ void read_wet(file)
 
   FOREWETS(w)
     {
-      if (fscanf(fd, "%F", &r) != 1)
+      if (fscanf(fd, "%lf", &r) != 1)
 	{
 	  fprintf(stderr, "Error; only %d weights were read.\n", NUMBER_WET(w));
 	  fclose(fd);
@@ -948,7 +939,7 @@ void read_wet(file)
   if (fscanf(fd, "%d timeconstants\n", &temp) == 1 && temp == unit_count)
     FOREUNITS(u)
       {
-	if (fscanf(fd, "%F", &r) != 1)
+	if (fscanf(fd, "%lf", &r) != 1)
 	  {
 	    fprintf(stderr, "Error: only %d time constants read.\n", NUMBER_UNIT(u));
 	    fclose(fd);
@@ -1265,7 +1256,7 @@ void weight_stats(arglist)
 }
 
 void randomize_weights(arglist)
-     char *arglist;
+     const char *arglist;
 {
   REAL excursion;
   wet w;
@@ -1281,7 +1272,7 @@ void randomize_weights(arglist)
 
   if (seed)
     {
-      printf(", seed %u.\n", seed);
+      printf(", seed %lu.\n", (unsigned long)seed);
       srandom(seed);
     }
   else
@@ -1300,7 +1291,7 @@ void randomize_weights(arglist)
 
 
 void multiply_epsilon(arglist)
-     char *arglist;
+     const char *arglist;
 {
   REAL factor;
 
@@ -1312,7 +1303,7 @@ void multiply_epsilon(arglist)
 
 
 void divide_epsilon(arglist)
-     char *arglist;
+     const char *arglist;
 {
   REAL divisor;
 
@@ -1745,15 +1736,15 @@ REAL compute_external_dE_dy(pat)
 			  u, NUMBER_PAT(pat));
 		  fprintf(stderr,
 			  "\t(u_sig_x(%d) == %f, u_I(%d) == %f)\n",
-			  u, u_sig_x(u), u_I(u));
+			  u, u_sig_x(u), u, u_I(u));
 		} else if (y==1.0) {
 		  y = 0.99999;
-		  fprintf(stderr, 
-			  "bumping 1.0 output %d for pattern %d\n", 
+		  fprintf(stderr,
+			  "bumping 1.0 output %d for pattern %d\n",
 			  u, NUMBER_PAT(pat));
-		  fprintf(stderr, 
+		  fprintf(stderr,
 			  "\t(u_sig_x(%d) == %f, u_I(%d) == %f)\n",
-			  u, u_sig_x(u), u_I(u));
+			  u, u_sig_x(u), u, u_I(u));
 		}
 		/******* end UGLY PATCH *********/
 		u_external_dE_dy(u) = e = - r/y + (1 - r)/(1-y);
@@ -2431,7 +2422,7 @@ void allocate_movie_space()
 
 
 void go(arglist)
-     char *arglist;
+     const char *arglist;
 {
   int epochs, i;
 
