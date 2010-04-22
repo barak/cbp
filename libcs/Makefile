@@ -13,6 +13,8 @@ OFILES= abspath.o an_bsearch.o ansi_bsearch.o atoh.o atoo.o atot.o \
 	wantread.o wantwrite.o
 
 CPPFLAGS += -Iinclude
+CPPFLAGS += -Wall
+CFLAGS += -O2
 
 all: libcs.a($(OFILES))
 
