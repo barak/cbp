@@ -1,0 +1,229 @@
+Barak:  
+Here's an edited version of "rcsdiff cbp.c".
+I removed changes that were just
+	  i) addition of "/* SUPPRESS ... */" to turn off Saber-C warnings
+	 ii) addition of cast to double of floating point arguments to
+	     library functions (in an, as I recall, vain attempt to use
+	     single precision floats).
+The remaining changes
+	  i) port to HP (conditionally compiled)
+	 ii) add exponential transfer function nodes for softmax
+	iii) add an error handler
+	 iv) add configuration commands for normalizing output,
+		giving a weight seed, giving initial weight excursion
+		(normalizing output shouldn't be a command, it should
+		be built into use of normalized distribution error)
+	  v) workaround misbehaviour of ported doublearg() 
+		(lines 1206,1207c1272,1278)
+	 vi) fix bugs/tidy up
+
+Also, otherlibs/RANDOM.h has changed to accommodate HP's (drand48
+instead of random).
+
+As I recall, I eventually gave up as the experiments I wanted to run
+became irrelevant.
+
+Bon Chance,
+stever
+
+===================================================================
+RCS file: RCS/cbp.c,v
+retrieving revision 1.1
+diff -r1.1 cbp.c
+35a36,41
+> #ifdef __hpux
+> 
+> # include <unistd.h>
+> 
+> #endif
+> 
+45c51
+< 
+---
+> int Epoch = 0;
+46a53,66
+> int matherr(exc)
+> struct exception *exc;
+> {
+>     char *s;
+>     switch(exc->type) {
+>     case DOMAIN:	s = "domain"; break;
+>     case SING:		s = "singularity"; break;
+>     case OVERFLOW:	s = "overflow"; break;
+>     case UNDERFLOW:	s = "underflow"; break;
+>     }
+>     fprintf(stdout, " %s(%f,%f): %s error\n", 
+> 		exc->name, exc->arg1, exc->arg2, s);
+>     abort();
+> }
+57a78
+>       abort();
+269c291,296
+< #define SIGMOID(x,index) (1/(1+(REAL)EXP(-(x))))
+---
+> /* STEVER */
+> /* #define SIGMOID(x,index) (1/(1+(REAL)EXP(-(x))))  */
+> #define SIGMOID_LIMIT 50
+> #define SIGMOID(x,index) ((x) > SIGMOID_LIMIT ? 1.0 \
+> 			 : ((x) < -SIGMOID_LIMIT ? 0.0 \
+> 			 : (1/(1+(REAL)EXP(-(x))))))
+283a311
+> #define EXPONENTIAL		3
+297c325,326
+<     return atanh(x);
+---
+>     /* return atanh(x); */
+>     return tanh(x);
+299a329,330
+>   case EXPONENTIAL:
+>     return EXP(x);
+316a348,349
+>   case EXPONENTIAL:
+>     return x;
+498a532,534
+> CBOOL(s_normalize_outputs, norm_outputs, "normalize output activations");
+> CINT(s_seed, weight_seed, 0, MAX_COOL_INT, "seed for wt randomize (hack)");
+> CREAL(s_excursion, weight_excursion, 0, INFINITY, "excursion for wt randomize (hack)");
+574a611,613
+>   CICBOOL("normalize_outputs", s_normalize_outputs),
+>   CICINT("weight_seed", s_seed),
+>   CICREAL("weight_excursion", s_excursion),
+586a626,637
+> #ifdef __hpux
+> 	/* system 5 */
+> 				/* SUPPRESS 590 *//* arglist unused */
+> void pwd_cmd(arglist)
+>      char *arglist;
+> {
+>   char buff[MAXPATHLEN+1];
+>   printf("%s\n", getcwd(buff, MAXPATHLEN+1));
+> }
+> 
+> #else
+> 				/* SUPPRESS 590 *//* arglist unused */
+593a645
+> #endif
+731c783,787
+<   fprintf(fd, "%s%g ", s, r);
+---
+> # ifdef __hpux
+>     fprintf(fd, "%s%g ", s, ((double) r));
+> # else
+>     fprintf(fd, "%s%g ", s, r);
+> # endif
+798a855,860
+>   else if (net_type == NET_STANDARD) 
+>     {
+>       /* don't allocate extra environments */
+>       envs_array[0] = temp_env;
+>       return;
+>     }
+816,817c878
+<   /* Space for the zetas; only needed by NET_TRAJ_GUESS_Z. */
+<   for (i=0, p= *envs_array; i<patt_count; i++,p++)
+---
+>   if (net_type == NET_TRAJ_GUESS_Z) 
+819,821c880,886
+<       p->z0_array = MALLOC(REAL, unit_count);
+<       for (j=0, rp=p->z0_array; j<unit_count; j++, rp++)
+< 	*rp = 0;
+---
+>       /* Space for the zetas; only needed by NET_TRAJ_GUESS_Z. */
+>       for (i=0, p= *envs_array; i<patt_count; i++,p++)
+>         {
+>           p->z0_array = MALLOC(REAL, unit_count);
+>           for (j=0, rp=p->z0_array; j<unit_count; j++, rp++)
+> 	    *rp = 0;
+>         }
+1206,1207c1272,1278
+< 
+<   excursion = doublearg(&arglist,0,"excursion:", 0.0, INFINITY, 1.0);
+---
+>   if (*arglist != '\0') {
+>       excursion = doublearg(&arglist,0,"excursion:", 0.0, INFINITY, 1.0);
+>   } else if (weight_excursion > 0.0) {
+>       excursion = weight_excursion;
+>   } else {
+>       excursion = 1.0;
+>   }
+1218c1289
+<       srandom(seed);
+---
+>       SRANDOM(seed);
+1219a1291,1295
+>   else if (weight_seed >= 0) 
+>     {
+>       printf(", seed %u.\n", weight_seed);
+>       SRANDOM((long)weight_seed);
+>     }
+1663,1665c1739,1771
+< 	      u_external_dE_dy(u) = e = - r/y + (1 - r)/(1-y);
+< 	      /* u_dE_dx(u) = u_y(u) - r; */
+< 	      total_e -= r*LOG(y) + (1-r)*LOG(1-y);
+---
+> 	      /* special case 0/0 == 0*log(0) == 0; otherwise signal
+> 	       * math error as usual -- STEVER
+> 	       */
+> 	      if (y==0.0 && r==0.0) {
+> 	         u_external_dE_dy(u) = e = 1.0;
+> 	         total_e -= 0;
+> 	      } else if (y==1.0 && r==1.0) {
+> 	         u_external_dE_dy(u) = e = -1.0;
+> 	         total_e -= 0;
+> 	      } else {
+> 		 /******* UGLY PATCH *********/
+> 		 if (y==0.0) {
+> 		     y = 0.00001;
+> 		     printf(stderr, 
+> 		      "bumping zero output %d for pattern %d at epoch %d", 
+> 		      u, NUMBER_PAT(pat), Epoch);
+> 		     printf(stderr, 
+> 		      "\t(u_sig_x(%d) == %f, u_I(%d) == %f)\n",
+> 		      u, u_sig_x(u), u_I(u));
+> 		 } else if (y==1.0) {
+> 		     y = 0.99999;
+> 		     printf(stderr, 
+> 		      "bumping 1.0 output %d for pattern %d at epoch %d", 
+> 		      u, NUMBER_PAT(pat), Epoch);
+> 		     printf(stderr, 
+> 		      "\t(u_sig_x(%d) == %f, u_I(%d) == %f)\n",
+> 		      u, u_sig_x(u), u_I(u));
+> 		 }
+> 		 /******* end UGLY PATCH *********/
+> 	         u_external_dE_dy(u) = e = - r/y + (1 - r)/(1-y);
+> 	         /* u_dE_dx(u) = u_y(u) - r; */
+> 	         total_e -= r*LOG(y) + (1-r)*LOG(1-y);
+> 	      }
+1937c2043,2051
+< 
+---
+> void normalize_outputs(pat)
+>      pattern pat;
+> {
+>   unit *pu;
+>   REAL *rp, tot_act_inv, tot_act = 0.0;
+>   FOROUTS(pu,rp,pat) tot_act += u_y(*pu);
+>   tot_act_inv = 1.0/tot_act;
+>   FOROUTS(pu,rp,pat) u_y(*pu) *= tot_act_inv;
+> }
+1955a2070,2071
+>   if (norm_outputs) normalize_outputs(pat);
+> 
+1957a2074
+>    
+2130c2248,2249
+<   total_e += forward_part(e, true, (FILE *)NULL, &total_B);
+---
+>   /* total_e += forward_part(e, true, (FILE *)NULL, &total_B); */
+>   total_e += forward_part(e, true, (FILE *)NULL, total_B); /*SUPPRESS 544 */
+2224a2344
+>   fflush(stdout);
+2334a2455
+>       Epoch = i;	/* debugging */
+2370a2492
+>       if (norm_outputs) normalize_outputs(e);
+2560a2683,2686
+> 
+>   norm_outputs = false;
+>   weight_seed = -1;
+>   weight_excursion = -1.0;
