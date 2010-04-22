@@ -12,6 +12,8 @@ OFILES= abspath.o an_bsearch.o ansi_bsearch.o atoh.o atoo.o atot.o \
 	stabsearch.o stlmatch.o strarg.o vmnlist.o vprintf.o \
 	wantread.o wantwrite.o
 
+CPPFLAGS += -Iinclude
+
 all: libcs.a($(OFILES))
 
 clean:
