@@ -42,20 +42,20 @@
 
 #ifndef	FALSE
 #define FALSE	0
-#endif	FALSE
+#endif
 #ifndef	TRUE
 #define TRUE	1
-#endif	TRUE
+#endif
 
 #define	CERROR		(-1)
 
 #ifndef	bool
 typedef enum	{ false = 0, true = 1 } bool;
-#endif	bool
+#endif
 
 #define	sizeofS(string)	(sizeof(string) - 1)
 #define sizeofA(array)	(sizeof(array)/sizeof(array[0]))
 
 #define caseE(enum_type)	case (int)(enum_type)
 
-#endif	_C_INCLUDE_
+#endif
