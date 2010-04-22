@@ -1,9 +1,4 @@
 /*
- * Copyright (c) 1990 Carnegie Mellon University
- * All rights reserved.  The CMU software License Agreement specifies
- * the terms and conditions for use and redistribution.
- */
-/*
  *  expand - expand wildcard filename specifications
  *
  *  Usage:
@@ -31,20 +26,6 @@
  *
  **********************************************************************
  * HISTORY
- * $Log:	expand.c,v $
- * Revision 1.3  92/03/24  14:09:21  mja
- * 	For gcc: forward declarations:
- * 		static	int	glob();
- * 		static	int	matchdir();
- * 		static	int	execbrc();
- * 		static	int	match(), amatch();
- * 		static	int	addone(), addpath();
- * 		static	int	gethdir();
- * 	[91/11/26            rvb]
- * 
- * Revision 1.2  90/12/12  20:50:27  mja
- * 	Add copyright/disclaimer for distribution.
- * 
  * 13-Nov-85  Glenn Marcy (gm0w) at Carnegie-Mellon University
  *	Replaced a stat() with lstat() and changed glob() to only call
  *	matchdir() for directories.
@@ -74,12 +55,7 @@ static	char	**BUFFER;		/* pointer to the buffer */
 static	int	BUFSIZE;		/* maximum number in buffer */
 static	int	bufcnt;			/* current number in buffer */
 
-static	int	glob();
-static	int	matchdir();
-static	int	execbrc();
-static	int	match(), amatch();
-static	int	addone(), addpath();
-static	int	gethdir();
+static glob(), matchdir(), execbrc(), match(), amatch(), addone(), addpath(), gethdir();
 
 int expand(spec, buffer, bufsize)
 	register char *spec;
