@@ -1,0 +1,520 @@
+
+Man entry for cbp (unformatted).
+
+
+The ci command interpreter is used for the user interface; ? or help
+should tell you how it works.  "*" will list the available commands,
+and "*=" will list the settings of the various variables.
+
+Most of the variables are irrelevant to standard backpropagation mode.
+All the variables with "B" in them, like "display_B", are irrelevent
+under any circumstances most users would come across.
+
+The following is a sample session of training a the 424 encoder
+example.
+
+	% cd /afs/cs.cmu.edu/user/bap/src/cbp/424
+	% ls
+	424.env		424.net		424.state
+	424.lay		424.slay	424.wet
+
+Crank up the simulator; the network description file, 424.net, is read
+at startup; that's what the command line argument is for
+
+	% cbp 424
+	11 units, 5 inputs, 4 outputs, 22 connections, 0 equivalences.
+	Randomizing Weights, excursion 1.000000, seed 658787246.
+
+Read in the environment file, 424.env.  The "Timesteps" isn't relevent
+to standard backprop mode.
+
+	cbp> read_env 424
+	Patterns: 4.  Timesteps: 1.
+
+Print values of all variables.  I am placing a tad of documentation
+before each one relevent to simple backprop mode.
+
+	cbp> *=
+This is printed on the left of each epoch report line, and is used as
+the default basename of output files.
+	run_name       	
+The number of learning cycles that have been done
+	epoch          	0
+learning rate
+	epsilon        	0
+	T_epsilon      	0
+learning momentum
+	momentum       	0
+A term $WeightDecay \sum_i w_i^2$ is added to the error
+	weight_decay   	0
+	T_decay        	0
+	end_of_time    	0
+	delta_t        	0.1
+	forward_criterion 	0.001
+	backward_criterion 	1e-06
+What kind of error measure to use.  Simple square is just squared
+difference of output from target.  Marginated square is zero if output
+is within square_margin of target (see below) and squared difference
+from there on.
+	error_type     	simple square
+Relevent only with Marginated square error; see error_type above.
+	square_margin  	0.2
+Stop the simulation if the angle between the accumulated velocity and
+the gradient is greater than 90 degrees.
+	stop_slosh     	yes
+	stop_high_B    	no
+	display_time   	no
+	display_B      	no
+	B_subepoch_count 	0
+	max_B          	0.1
+	dB_hack        	1
+The kind of network to simulate.
+	net_type       	standard backpropagation
+Each epoch, show the number of incorrect cases (in parens after
+error).  See "error_margin" for criterion.
+	display_cases  	yes
+Stop the simulation when there are no incorrect cases (as shown by
+display_cases, which must be on for this to be enabled.)
+	stop_zero_errors 	no
+Each epoch, show the ratio between the actual accumulated velocity and
+the velocity you'd expect to have accumulated if you reached terminal
+velocity, and the gradient was always the same as it is now, and in
+the same direction.
+	display_expected_velocity 	yes
+How near to the target an output must be to count as correct in the
+count of correct cases made by activating the display_cases option
+	correct_margin 	0.4
+Every weight_check_interval, a weight checkpoint file will be written
+	weight_check_interval 	0
+Weight checkpoint files have this name, with the epoch number tacked
+onto the end.  Defaults to run_name.wet
+	weight_check_file 	
+Every weight_check_interval, a state checkpoint file will be written
+	state_check_interval 	0
+State checkpoint files have this name, with the epoch number tacked
+onto the end.  Defaults to run_name.state
+	state_check_file 	
+	traj_check_interval 	0
+	traj_check_file 	
+These determine which states are dumped into state output files.  The
+units with numbers betweenn those given, inclusive, are output.  These
+default to numbers corresponding to "all the units."
+	low_printing_unit       0
+	high_printing_unit      10
+
+	perturb_interval 	0
+	perturb_magnitude 	0
+
+Get a list of all commands
+	cbp> *
+
+This reads the weights from a weight file
+	read_weights
+This reads a set of I/O patterns 
+	read_environment
+	read_z0s
+	write_z0s
+Write the weights out to a named file
+	write_weights
+Write the states of all the units for each pattern in the environment
+out to a named file
+	write_states
+	write_trajectory
+Write the weights to a checkpoint file (see weight_check_file for filename)
+	checkpoint_weights
+Write the states to a checkpoint file (see weight_check_file for filename)
+	checkpoint_states
+	checkpoint_trajectory
+Run the network for a number of epochs (can be interrupted)
+	go
+Randomize the weights to uniform random values between plus and minus
+x, where x is the "excursion" you give.  A random seed can be given
+also, to get the same random weights you got some other time, assuming you
+saved the random seed that was used.
+	randomize_weights
+	one_Ts
+Set the accumulated velocity to zero
+	clear_momentum
+Multiply the learning rate by the given number
+	multiply_epsilon
+Divide the learning rate by the given number
+	divide_epsilon
+Change working directories
+	cd
+Print the current working directory
+	pwd
+Print a blurb about the ci command interpreter
+	help
+
+Set epsilon
+	cbp> eps=
+	epsilon  (-1e+20 to 1e+20)  [0]  .01
+	epsilon        	0.01
+Turn on the displaying a count of environmental patterns the net gets wrong
+	cbp> display_cases = yes
+	display_cases  	yes
+Set momentum
+	cbp> mom = .8
+	momentum       	0.8
+Run for a bit
+	cbp> go 10
+	 1 0.588841(4) cos:NaN |grad|:0.645762 |v|:0.000000 v/E(v):0.000000.
+	 2 0.587799(4) cos:0.999999 |grad|:0.644989 |v|:0.645762 v/E(v):0.200240.
+	 3 0.585928(4) cos:0.999993 |grad|:0.643583 |v|:1.161598 v/E(v):0.360979.
+	 4 0.583402(4) cos:0.999981 |grad|:0.641644 |v|:1.572859 v/E(v):0.490259.
+	 5 0.580360(4) cos:0.999961 |grad|:0.639250 |v|:1.899923 v/E(v):0.594423.
+	 6 0.576917(4) cos:0.999933 |grad|:0.636459 |v|:2.159171 v/E(v):0.678495.
+	 7 0.573165(4) cos:0.999898 |grad|:0.633319 |v|:2.363764 v/E(v):0.746469.
+	 8 0.569180(4) cos:0.999858 |grad|:0.629866 |v|:2.524282 v/E(v):0.801530.
+	 9 0.565021(4) cos:0.999815 |grad|:0.626132 |v|:2.649223 v/E(v):0.846219.
+	 10 0.560738(4) cos:0.999770 |grad|:0.622142 |v|:2.745421 v/E(v):0.882571.
+Raise learning rate
+	cbp> mul 5
+	cbp> go 10
+	 11 0.556370(4) cos:0.999726 |grad|:0.617917 |v|:2.818367 v/E(v):0.912216.
+	 12 0.534612(4) cos:0.998665 |grad|:0.594130 |v|:2.872478 v/E(v):0.966953.
+	 13 0.513663(4) cos:0.997325 |grad|:0.566373 |v|:2.891482 v/E(v):1.021052.
+	 14 0.493893(4) cos:0.996029 |grad|:0.535018 |v|:2.878341 v/E(v):1.075978.
+	 15 0.475595(4) cos:0.994937 |grad|:0.500645 |v|:2.835967 v/E(v):1.132926.
+	 16 0.458977(4) cos:0.994091 |grad|:0.464033 |v|:2.767341 v/E(v):1.192736.
+	 17 0.444163(4) cos:0.993444 |grad|:0.426125 |v|:2.675638 v/E(v):1.255800.
+	 18 0.431187(4) cos:0.992876 |grad|:0.387951 |v|:2.564304 v/E(v):1.321974.
+	 19 0.420007(4) cos:0.992213 |grad|:0.350529 |v|:2.437069 v/E(v):1.390511.
+	 20 0.410519(4) cos:0.991242 |grad|:0.314768 |v|:2.297869 v/E(v):1.460038.
+Raise it some more
+	cbp> mul 5
+	cbp> go 10
+	 21 0.402571(4) cos:0.989726 |grad|:0.281398 |v|:2.150708 v/E(v):1.528588.
+	 22 0.377270(4) cos:0.907307 |grad|:0.142665 |v|:1.999479 v/E(v):2.803034.
+	 23 0.368786(4) cos:0.375044 |grad|:0.082195 |v|:1.730064 v/E(v):4.209672.
+	 24 0.368351(4) cos:-0.236449 |grad|:0.090744 |v|:1.416928 v/E(v):3.122926.
+	Sloshing...
+	  Break!
+Oops, we raised it too high.  Lower it, clear the accumulated
+momentum, and continue
+	cbp> div 5
+	cbp> clear_mom
+	cbp> go 10
+	 25 0.368351(4) cos:NaN |grad|:0.090744 |v|:0.000000 v/E(v):0.000000.
+	 26 0.368248(4) cos:0.999994 |grad|:0.090641 |v|:0.090744 v/E(v):0.200228.
+	 27 0.368063(4) cos:0.999969 |grad|:0.090457 |v|:0.163235 v/E(v):0.360912.
+	 28 0.367813(4) cos:0.999912 |grad|:0.090213 |v|:0.221043 v/E(v):0.490050.
+	 29 0.367513(4) cos:0.999814 |grad|:0.089925 |v|:0.267042 v/E(v):0.593925.
+	 30 0.367172(4) cos:0.999672 |grad|:0.089607 |v|:0.303546 v/E(v):0.677505.
+	 31 0.366801(4) cos:0.999488 |grad|:0.089273 |v|:0.332423 v/E(v):0.744733.
+	 32 0.366405(4) cos:0.999268 |grad|:0.088933 |v|:0.355177 v/E(v):0.798755.
+	 33 0.365992(4) cos:0.999019 |grad|:0.088595 |v|:0.373025 v/E(v):0.842089.
+	 34 0.365564(4) cos:0.998754 |grad|:0.088268 |v|:0.386948 v/E(v):0.876760.
+Maybe raise the learning rate a touch
+	cbp> mul 2
+Momentum too
+	cbp> mom =
+	momentum  (0 to 1)  [0.8]  .9
+	momentum       	0.9
+What's the learning rate?
+	cbp> eps
+	epsilon        	0.1
+	cbp> go 10
+	 35 0.365127(4) cos:0.998480 |grad|:0.087957 |v|:0.397740 v/E(v):0.452200.
+	 36 0.364152(4) cos:0.996700 |grad|:0.087334 |v|:0.445816 v/E(v):0.510470.
+	 37 0.363093(4) cos:0.994172 |grad|:0.086773 |v|:0.488332 v/E(v):0.562767.
+	 38 0.361963(4) cos:0.990877 |grad|:0.086325 |v|:0.525849 v/E(v):0.609154.
+	 39 0.360771(4) cos:0.986862 |grad|:0.086035 |v|:0.558922 v/E(v):0.649648.
+	 40 0.359523(4) cos:0.982262 |grad|:0.085944 |v|:0.588099 v/E(v):0.684285.
+	 41 0.358227(4) cos:0.977301 |grad|:0.086080 |v|:0.613920 v/E(v):0.713195.
+	 42 0.356884(4) cos:0.972286 |grad|:0.086461 |v|:0.636915 v/E(v):0.736652.
+	 43 0.355495(4) cos:0.967570 |grad|:0.087087 |v|:0.657599 v/E(v):0.755109.
+	 44 0.354060(4) cos:0.963508 |grad|:0.087945 |v|:0.676459 v/E(v):0.769184.
+Let's explain what these numbers mean.
+	cbp> go 10
+	 45 0.352577(4) cos:0.960404 |grad|:0.089010 |v|:0.693948 v/E(v):0.779627.
+---------^ epoch number
+	 46 0.351043(4) cos:0.958469 |grad|:0.090248 |v|:0.710472 v/E(v):0.787248.
+-------------^ Error per pattern
+	 47 0.349452(4) cos:0.957793 |grad|:0.091616 |v|:0.726381 v/E(v):0.792852.
+---------------------^ number of patterns the net has wrong (all of them)
+	 48 0.347803(4) cos:0.958344 |grad|:0.093074 |v|:0.741960 v/E(v):0.797174.
+----------------------------^ cosine of angle between the
+gradient and the accumulated momentum
+	 49 0.346091(4) cos:0.959980 |grad|:0.094580 |v|:0.757427 v/E(v):0.800834.
+--------------------------------------------^ The magnitude of the gradient
+	 50 0.344311(4) cos:0.962477 |grad|:0.096098 |v|:0.772933 v/E(v):0.804316.
+The magnitude of the accumulated momentum ---------------^
+	 51 0.342462(4) cos:0.965571 |grad|:0.097600 |v|:0.788563 v/E(v):0.807955.
+The ratio ... see display_expected_velocity -----------------------------^
+	 52 0.340542(4) cos:0.968984 |grad|:0.099063 |v|:0.804348 v/E(v):0.811956.
+	 53 0.338549(4) cos:0.972458 |grad|:0.100473 |v|:0.820269 v/E(v):0.816407.
+	 54 0.336482(4) cos:0.975771 |grad|:0.101823 |v|:0.836275 v/E(v):0.821305.
+	cbp> go 10
+	 55 0.334342(4) cos:0.978755 |grad|:0.103110 |v|:0.852295 v/E(v):0.826586.
+	 56 0.332130(4) cos:0.981292 |grad|:0.104338 |v|:0.868242 v/E(v):0.832144.
+	 57 0.329848(4) cos:0.983322 |grad|:0.105511 |v|:0.884032 v/E(v):0.837855.
+	 58 0.327495(4) cos:0.984830 |grad|:0.106637 |v|:0.899586 v/E(v):0.843598.
+	 59 0.325076(4) cos:0.985842 |grad|:0.107720 |v|:0.914833 v/E(v):0.849266.
+	 60 0.322591(4) cos:0.986412 |grad|:0.108768 |v|:0.929721 v/E(v):0.854774.
+	 61 0.320042(4) cos:0.986616 |grad|:0.109783 |v|:0.944208 v/E(v):0.860066.
+	 62 0.317431(4) cos:0.986538 |grad|:0.110768 |v|:0.958268 v/E(v):0.865115.
+	 63 0.314761(4) cos:0.986264 |grad|:0.111722 |v|:0.971887 v/E(v):0.869919.
+	 64 0.312033(4) cos:0.985873 |grad|:0.112643 |v|:0.985058 v/E(v):0.874499.
+	cbp> go 10
+	 65 0.309248(4) cos:0.985434 |grad|:0.113527 |v|:0.997782 v/E(v):0.878893.
+	 66 0.306408(4) cos:0.985001 |grad|:0.114371 |v|:1.010062 v/E(v):0.883146.
+	 67 0.303516(4) cos:0.984612 |grad|:0.115169 |v|:1.021901 v/E(v):0.887307.
+	 68 0.300572(4) cos:0.984290 |grad|:0.115916 |v|:1.033304 v/E(v):0.891427.
+	 69 0.297580(4) cos:0.984045 |grad|:0.116607 |v|:1.044269 v/E(v):0.895549.
+	 70 0.294541(4) cos:0.983875 |grad|:0.117237 |v|:1.054792 v/E(v):0.899709.
+	 71 0.291457(4) cos:0.983769 |grad|:0.117803 |v|:1.064866 v/E(v):0.903935.
+	 72 0.288332(4) cos:0.983711 |grad|:0.118303 |v|:1.074479 v/E(v):0.908246.
+	 73 0.285168(4) cos:0.983685 |grad|:0.118732 |v|:1.083615 v/E(v):0.912654.
+	 74 0.281968(4) cos:0.983670 |grad|:0.119091 |v|:1.092258 v/E(v):0.917166.
+	cbp> go 10
+	 75 0.278736(4) cos:0.983653 |grad|:0.119376 |v|:1.100386 v/E(v):0.921784.
+	 76 0.275474(4) cos:0.983622 |grad|:0.119587 |v|:1.107981 v/E(v):0.926509.
+	 77 0.272188(4) cos:0.983570 |grad|:0.119721 |v|:1.115019 v/E(v):0.931345.
+	 78 0.268880(4) cos:0.983497 |grad|:0.119778 |v|:1.121479 v/E(v):0.936296.
+	 79 0.265554(4) cos:0.983406 |grad|:0.119755 |v|:1.127341 v/E(v):0.941374.
+	 80 0.262215(4) cos:0.983308 |grad|:0.119648 |v|:1.132583 v/E(v):0.946594.
+	 81 0.258867(4) cos:0.983214 |grad|:0.119455 |v|:1.137184 v/E(v):0.951978.
+	 82 0.255515(4) cos:0.983140 |grad|:0.119171 |v|:1.141124 v/E(v):0.957553.
+	 83 0.252162(4) cos:0.983102 |grad|:0.118792 |v|:1.144380 v/E(v):0.963352.
+This is chance level, output of 0.5 for each case, error .25 for each case
+	 84 0.248814(4) cos:0.983115 |grad|:0.118313 |v|:1.146933 v/E(v):0.969408.
+	cbp> go 10
+	 85 0.245476(4) cos:0.983192 |grad|:0.117730 |v|:1.148758 v/E(v):0.975756.
+	 86 0.242152(4) cos:0.983344 |grad|:0.117040 |v|:1.149835 v/E(v):0.982430.
+	 87 0.238848(4) cos:0.983576 |grad|:0.116239 |v|:1.150138 v/E(v):0.989458.
+	 88 0.235569(4) cos:0.983889 |grad|:0.115327 |v|:1.149646 v/E(v):0.996862.
+	 89 0.232320(4) cos:0.984280 |grad|:0.114302 |v|:1.148335 v/E(v):1.004655.
+	 90 0.229106(4) cos:0.984741 |grad|:0.113165 |v|:1.146184 v/E(v):1.012840.
+Starting to get it
+	 91 0.225933(3) cos:0.985260 |grad|:0.111921 |v|:1.143174 v/E(v):1.021409.
+	 92 0.222806(3) cos:0.985823 |grad|:0.110574 |v|:1.139289 v/E(v):1.030343.
+	 93 0.219729(3) cos:0.986415 |grad|:0.109129 |v|:1.134518 v/E(v):1.039611.
+	 94 0.216707(3) cos:0.987019 |grad|:0.107595 |v|:1.128855 v/E(v):1.049171.
+	cbp> go 50
+	 95 0.213745(3) cos:0.987619 |grad|:0.105980 |v|:1.122301 v/E(v):1.058974.
+	 96 0.210847(3) cos:0.988201 |grad|:0.104294 |v|:1.114862 v/E(v):1.068961.
+	 97 0.208016(3) cos:0.988750 |grad|:0.102547 |v|:1.106555 v/E(v):1.079066.
+	 98 0.205255(3) cos:0.989255 |grad|:0.100751 |v|:1.097400 v/E(v):1.089222.
+falling into place
+	 99 0.202566(2) cos:0.989708 |grad|:0.098915 |v|:1.087428 v/E(v):1.099354.
+	 100 0.199953(2) cos:0.990100 |grad|:0.097051 |v|:1.076676 v/E(v):1.109389.
+	 101 0.197416(2) cos:0.990427 |grad|:0.095170 |v|:1.065186 v/E(v):1.119251.
+	 102 0.194957(2) cos:0.990685 |grad|:0.093280 |v|:1.053008 v/E(v):1.128863.
+	 103 0.192576(2) cos:0.990871 |grad|:0.091393 |v|:1.040196 v/E(v):1.138153.
+	 104 0.190273(2) cos:0.990984 |grad|:0.089518 |v|:1.026809 v/E(v):1.147047.
+	 105 0.188048(2) cos:0.991023 |grad|:0.087662 |v|:1.012910 v/E(v):1.155474.
+	 106 0.185901(2) cos:0.990987 |grad|:0.085834 |v|:0.998563 v/E(v):1.163368.
+	 107 0.183829(2) cos:0.990877 |grad|:0.084041 |v|:0.983834 v/E(v):1.170663.
+	 108 0.181832(2) cos:0.990693 |grad|:0.082289 |v|:0.968791 v/E(v):1.177299.
+	 109 0.179907(2) cos:0.990435 |grad|:0.080585 |v|:0.953501 v/E(v):1.183219.
+	 110 0.178053(2) cos:0.990104 |grad|:0.078934 |v|:0.938031 v/E(v):1.188371.
+	 111 0.176268(2) cos:0.989700 |grad|:0.077341 |v|:0.922448 v/E(v):1.192707.
+	 112 0.174549(2) cos:0.989222 |grad|:0.075809 |v|:0.906815 v/E(v):1.196184.
+	 113 0.172893(2) cos:0.988673 |grad|:0.074343 |v|:0.891194 v/E(v):1.198764.
+	 114 0.171298(2) cos:0.988051 |grad|:0.072945 |v|:0.875646 v/E(v):1.200415.
+	 115 0.169762(2) cos:0.987359 |grad|:0.071620 |v|:0.860229 v/E(v):1.201111.
+	 116 0.168280(2) cos:0.986599 |grad|:0.070368 |v|:0.844996 v/E(v):1.200831.
+	 117 0.166850(2) cos:0.985772 |grad|:0.069192 |v|:0.830001 v/E(v):1.199562.
+	 118 0.165470(2) cos:0.984882 |grad|:0.068094 |v|:0.815291 v/E(v):1.197296.
+	 119 0.164136(2) cos:0.983934 |grad|:0.067076 |v|:0.800914 v/E(v):1.194035.
+	 120 0.162846(2) cos:0.982934 |grad|:0.066139 |v|:0.786912 v/E(v):1.189787.
+	 121 0.161596(2) cos:0.981890 |grad|:0.065283 |v|:0.773327 v/E(v):1.184569.
+	 122 0.160384(2) cos:0.980810 |grad|:0.064511 |v|:0.760196 v/E(v):1.178405.
+	 123 0.159207(2) cos:0.979706 |grad|:0.063821 |v|:0.747555 v/E(v):1.171330.
+	 124 0.158061(2) cos:0.978590 |grad|:0.063215 |v|:0.735437 v/E(v):1.163386.
+	 125 0.156945(2) cos:0.977477 |grad|:0.062693 |v|:0.723872 v/E(v):1.154624.
+	 126 0.155855(2) cos:0.976381 |grad|:0.062255 |v|:0.712888 v/E(v):1.145105.
+	 127 0.154789(2) cos:0.975319 |grad|:0.061901 |v|:0.702513 v/E(v):1.134898.
+	 128 0.153744(2) cos:0.974308 |grad|:0.061630 |v|:0.692770 v/E(v):1.124077.
+	 129 0.152718(2) cos:0.973366 |grad|:0.061442 |v|:0.683681 v/E(v):1.112726.
+	 130 0.151707(2) cos:0.972509 |grad|:0.061336 |v|:0.675265 v/E(v):1.100934.
+	 131 0.150710(2) cos:0.971755 |grad|:0.061310 |v|:0.667541 v/E(v):1.088793.
+	 132 0.149723(2) cos:0.971119 |grad|:0.061364 |v|:0.660524 v/E(v):1.076401.
+	 133 0.148745(2) cos:0.970613 |grad|:0.061496 |v|:0.654227 v/E(v):1.063856.
+	 134 0.147773(2) cos:0.970248 |grad|:0.061703 |v|:0.648662 v/E(v):1.051257.
+	 135 0.146805(2) cos:0.970034 |grad|:0.061985 |v|:0.643836 v/E(v):1.038700.
+	 136 0.145838(2) cos:0.969974 |grad|:0.062338 |v|:0.639757 v/E(v):1.026281.
+	 137 0.144870(2) cos:0.970070 |grad|:0.062759 |v|:0.636428 v/E(v):1.014088.
+	 138 0.143898(2) cos:0.970322 |grad|:0.063245 |v|:0.633849 v/E(v):1.002208.
+	 139 0.142921(2) cos:0.970723 |grad|:0.063794 |v|:0.632017 v/E(v):0.990717.
+	 140 0.141937(2) cos:0.971267 |grad|:0.064401 |v|:0.630928 v/E(v):0.979687.
+	 141 0.140943(2) cos:0.971941 |grad|:0.065063 |v|:0.630572 v/E(v):0.969178.
+	 142 0.139936(2) cos:0.972734 |grad|:0.065774 |v|:0.630937 v/E(v):0.959246.
+	 143 0.138916(2) cos:0.973630 |grad|:0.066532 |v|:0.632009 v/E(v):0.949935.
+	 144 0.137881(2) cos:0.974614 |grad|:0.067330 |v|:0.633767 v/E(v):0.941281.
+	cbp> go 100
+	 145 0.136827(2) cos:0.975669 |grad|:0.068165 |v|:0.636190 v/E(v):0.933314.
+	 146 0.135754(2) cos:0.976777 |grad|:0.069030 |v|:0.639252 v/E(v):0.926053.
+	 147 0.134660(2) cos:0.977923 |grad|:0.069920 |v|:0.642923 v/E(v):0.919513.
+	 148 0.133544(2) cos:0.979091 |grad|:0.070830 |v|:0.647172 v/E(v):0.913701.
+	 149 0.132403(2) cos:0.980266 |grad|:0.071753 |v|:0.651963 v/E(v):0.908617.
+	 150 0.131236(2) cos:0.981435 |grad|:0.072685 |v|:0.657257 v/E(v):0.904260.
+	 151 0.130043(2) cos:0.982586 |grad|:0.073618 |v|:0.663013 v/E(v):0.900620.
+	 152 0.128822(2) cos:0.983709 |grad|:0.074546 |v|:0.669187 v/E(v):0.897686.
+	 153 0.127573(2) cos:0.984795 |grad|:0.075464 |v|:0.675733 v/E(v):0.895443.
+	 154 0.126295(2) cos:0.985838 |grad|:0.076364 |v|:0.682601 v/E(v):0.893876.
+	 155 0.124986(2) cos:0.986832 |grad|:0.077242 |v|:0.689743 v/E(v):0.892965.
+	 156 0.123648(2) cos:0.987773 |grad|:0.078090 |v|:0.697105 v/E(v):0.892691.
+	 157 0.122280(2) cos:0.988658 |grad|:0.078904 |v|:0.704636 v/E(v):0.893032.
+	 158 0.120881(2) cos:0.989486 |grad|:0.079676 |v|:0.712279 v/E(v):0.893966.
+	 159 0.119454(2) cos:0.990257 |grad|:0.080403 |v|:0.719982 v/E(v):0.895472.
+	 160 0.117997(2) cos:0.990970 |grad|:0.081077 |v|:0.727689 v/E(v):0.897526.
+	 161 0.116512(2) cos:0.991627 |grad|:0.081696 |v|:0.735346 v/E(v):0.900106.
+	 162 0.115001(2) cos:0.992230 |grad|:0.082253 |v|:0.742898 v/E(v):0.903188.
+	 163 0.113463(2) cos:0.992780 |grad|:0.082745 |v|:0.750291 v/E(v):0.906750.
+	 164 0.111902(2) cos:0.993281 |grad|:0.083169 |v|:0.757475 v/E(v):0.910768.
+	 165 0.110319(2) cos:0.993734 |grad|:0.083521 |v|:0.764398 v/E(v):0.915220.
+	 166 0.108715(2) cos:0.994144 |grad|:0.083798 |v|:0.771012 v/E(v):0.920080.
+	 167 0.107092(1) cos:0.994512 |grad|:0.084000 |v|:0.777271 v/E(v):0.925327.
+	 168 0.105454(1) cos:0.994842 |grad|:0.084123 |v|:0.783132 v/E(v):0.930936.
+	 169 0.103803(1) cos:0.995137 |grad|:0.084168 |v|:0.788554 v/E(v):0.936883.
+	 170 0.102140(1) cos:0.995400 |grad|:0.084134 |v|:0.793501 v/E(v):0.943144.
+	 171 0.100470(1) cos:0.995633 |grad|:0.084021 |v|:0.797938 v/E(v):0.949693.
+	 172 0.098794(1) cos:0.995838 |grad|:0.083830 |v|:0.801836 v/E(v):0.956504.
+	 173 0.097115(1) cos:0.996018 |grad|:0.083563 |v|:0.805170 v/E(v):0.963553.
+	 174 0.095437(1) cos:0.996175 |grad|:0.083221 |v|:0.807917 v/E(v):0.970810.
+	 175 0.093761(1) cos:0.996310 |grad|:0.082807 |v|:0.810060 v/E(v):0.978250.
+	 176 0.092091(1) cos:0.996424 |grad|:0.082324 |v|:0.811587 v/E(v):0.985843.
+	 177 0.090430(1) cos:0.996519 |grad|:0.081775 |v|:0.812488 v/E(v):0.993560.
+	 178 0.088779(1) cos:0.996596 |grad|:0.081164 |v|:0.812758 v/E(v):1.001373.
+	 179 0.087142(1) cos:0.996655 |grad|:0.080495 |v|:0.812398 v/E(v):1.009250.
+	 180 0.085522(1) cos:0.996697 |grad|:0.079772 |v|:0.811411 v/E(v):1.017161.
+took long enough (parameters used were very conservative, and initial
+weights were too big)
+	 181 0.083919(0) cos:0.996723 |grad|:0.079000 |v|:0.809805 v/E(v):1.025076.
+	 182 0.082337(0) cos:0.996734 |grad|:0.078182 |v|:0.807590 v/E(v):1.032962.
+	 183 0.080777(0) cos:0.996729 |grad|:0.077324 |v|:0.804782 v/E(v):1.040791.
+	 184 0.079242(0) cos:0.996711 |grad|:0.076431 |v|:0.801400 v/E(v):1.048532.
+	 185 0.077732(0) cos:0.996679 |grad|:0.075506 |v|:0.797463 v/E(v):1.056155.
+	 186 0.076249(0) cos:0.996636 |grad|:0.074556 |v|:0.792996 v/E(v):1.063632.
+	 187 0.074794(0) cos:0.996581 |grad|:0.073583 |v|:0.788025 v/E(v):1.070937.
+	 188 0.073368(0) cos:0.996517 |grad|:0.072592 |v|:0.782577 v/E(v):1.078043.
+	 189 0.071973(0) cos:0.996445 |grad|:0.071588 |v|:0.776682 v/E(v):1.084927.
+	 190 0.070608(0) cos:0.996365 |grad|:0.070575 |v|:0.770372 v/E(v):1.091567.
+	 191 0.069275(0) cos:0.996282 |grad|:0.069555 |v|:0.763676 v/E(v):1.097944.
+	 192 0.067974(0) cos:0.996195 |grad|:0.068533 |v|:0.756629 v/E(v):1.104041.
+	 193 0.066704(0) cos:0.996107 |grad|:0.067511 |v|:0.749262 v/E(v):1.109842.
+	 194 0.065466(0) cos:0.996019 |grad|:0.066492 |v|:0.741607 v/E(v):1.115335.
+	 195 0.064260(0) cos:0.995933 |grad|:0.065479 |v|:0.733698 v/E(v):1.120512.
+	 196 0.063086(0) cos:0.995851 |grad|:0.064474 |v|:0.725565 v/E(v):1.125364.
+	 197 0.061943(0) cos:0.995775 |grad|:0.063479 |v|:0.717238 v/E(v):1.129886.
+	 198 0.060832(0) cos:0.995705 |grad|:0.062496 |v|:0.708749 v/E(v):1.134077.
+	 199 0.059750(0) cos:0.995642 |grad|:0.061526 |v|:0.700125 v/E(v):1.137936.
+	 200 0.058699(0) cos:0.995589 |grad|:0.060571 |v|:0.691394 v/E(v):1.141465.
+	 201 0.057678(0) cos:0.995545 |grad|:0.059631 |v|:0.682582 v/E(v):1.144668.
+	 202 0.056686(0) cos:0.995511 |grad|:0.058709 |v|:0.673713 v/E(v):1.147551.
+	 203 0.055721(0) cos:0.995488 |grad|:0.057804 |v|:0.664810 v/E(v):1.150121.
+	 204 0.054785(0) cos:0.995476 |grad|:0.056916 |v|:0.655895 v/E(v):1.152386.
+	 205 0.053875(0) cos:0.995474 |grad|:0.056047 |v|:0.646987 v/E(v):1.154357.
+	 206 0.052991(0) cos:0.995484 |grad|:0.055197 |v|:0.638104 v/E(v):1.156045.
+	 207 0.052133(0) cos:0.995505 |grad|:0.054366 |v|:0.629263 v/E(v):1.157461.
+	 208 0.051299(0) cos:0.995536 |grad|:0.053553 |v|:0.620480 v/E(v):1.158619.
+	 209 0.050490(0) cos:0.995576 |grad|:0.052760 |v|:0.611767 v/E(v):1.159530.
+	 210 0.049703(0) cos:0.995626 |grad|:0.051985 |v|:0.603137 v/E(v):1.160209.
+	 211 0.048939(0) cos:0.995685 |grad|:0.051229 |v|:0.594601 v/E(v):1.160669.
+Let it keep running for a while to firm things up
+	 212 0.048197(0) cos:0.995752 |grad|:0.050492 |v|:0.586168 v/E(v):1.160923.
+	 213 0.047475(0) cos:0.995826 |grad|:0.049772 |v|:0.577847 v/E(v):1.160986.
+	 214 0.046774(0) cos:0.995907 |grad|:0.049071 |v|:0.569645 v/E(v):1.160871.
+	 215 0.046093(0) cos:0.995993 |grad|:0.048386 |v|:0.561568 v/E(v):1.160590.
+	 216 0.045430(0) cos:0.996085 |grad|:0.047719 |v|:0.553620 v/E(v):1.160158.
+	 217 0.044785(0) cos:0.996181 |grad|:0.047069 |v|:0.545807 v/E(v):1.159586.
+	 218 0.044159(0) cos:0.996280 |grad|:0.046435 |v|:0.538132 v/E(v):1.158886.
+	 219 0.043549(0) cos:0.996383 |grad|:0.045817 |v|:0.530596 v/E(v):1.158071.
+	 220 0.042955(0) cos:0.996487 |grad|:0.045215 |v|:0.523203 v/E(v):1.157151.
+	 221 0.042378(0) cos:0.996593 |grad|:0.044627 |v|:0.515952 v/E(v):1.156136.
+	 222 0.041816(0) cos:0.996700 |grad|:0.044054 |v|:0.508845 v/E(v):1.155038.
+	 223 0.041268(0) cos:0.996807 |grad|:0.043496 |v|:0.501883 v/E(v):1.153864.
+	 224 0.040735(0) cos:0.996915 |grad|:0.042951 |v|:0.495063 v/E(v):1.152624.
+	 225 0.040215(0) cos:0.997021 |grad|:0.042420 |v|:0.488387 v/E(v):1.151327.
+	 226 0.039708(0) cos:0.997127 |grad|:0.041901 |v|:0.481853 v/E(v):1.149979.
+	 227 0.039215(0) cos:0.997231 |grad|:0.041395 |v|:0.475459 v/E(v):1.148588.
+	 228 0.038733(0) cos:0.997333 |grad|:0.040901 |v|:0.469203 v/E(v):1.147160.
+	 229 0.038263(0) cos:0.997433 |grad|:0.040419 |v|:0.463085 v/E(v):1.145702.
+	 230 0.037805(0) cos:0.997532 |grad|:0.039949 |v|:0.457101 v/E(v):1.144219.
+	 231 0.037358(0) cos:0.997627 |grad|:0.039489 |v|:0.451250 v/E(v):1.142717.
+	 232 0.036922(0) cos:0.997721 |grad|:0.039040 |v|:0.445529 v/E(v):1.141200.
+	 233 0.036496(0) cos:0.997811 |grad|:0.038602 |v|:0.439935 v/E(v):1.139672.
+	 234 0.036080(0) cos:0.997899 |grad|:0.038174 |v|:0.434466 v/E(v):1.138138.
+	 235 0.035673(0) cos:0.997983 |grad|:0.037755 |v|:0.429120 v/E(v):1.136600.
+	 236 0.035276(0) cos:0.998065 |grad|:0.037345 |v|:0.423894 v/E(v):1.135063.
+	 237 0.034888(0) cos:0.998144 |grad|:0.036945 |v|:0.418784 v/E(v):1.133529.
+	 238 0.034508(0) cos:0.998220 |grad|:0.036554 |v|:0.413788 v/E(v):1.132000.
+	 239 0.034137(0) cos:0.998293 |grad|:0.036171 |v|:0.408904 v/E(v):1.130479.
+	 240 0.033774(0) cos:0.998363 |grad|:0.035796 |v|:0.404128 v/E(v):1.128968.
+	 241 0.033419(0) cos:0.998430 |grad|:0.035430 |v|:0.399458 v/E(v):1.127469.
+	 242 0.033071(0) cos:0.998495 |grad|:0.035071 |v|:0.394891 v/E(v):1.125984.
+	 243 0.032731(0) cos:0.998557 |grad|:0.034719 |v|:0.390425 v/E(v):1.124514.
+	 244 0.032398(0) cos:0.998616 |grad|:0.034375 |v|:0.386056 v/E(v):1.123060.
+Okay, now things should be pretty firm.  Let's look at the outputs
+	cbp> write_st
+	State file to write: /dev/tty
+	11 units
+	4 patterns
+	1 1 0 0 0 0.057084 0.036367 0.791040 0.168167 0.006977 0.147379 
+	1 0 1 0 0 0.923575 0.041349 0.139184 0.820154 0.148581 0.002259 
+	1 0 0 1 0 0.961232 0.959144 0.003733 0.107678 0.835538 0.063689 
+	1 0 0 0 1 0.026562 0.921445 0.113286 0.004758 0.124165 0.865541 
+inputs  \-------/
+hidden units      \---------------/
+output units                         \--------------------------------/
+note that the first input is really just the "bias unit"
+	cbp> 
+	cbp> ^D
+
+
+
+
+
+
+
+
+
+			External File Formats
+
+Weight files (.wet) have the following format:
+
+	<n> epochs
+	<n> weights
+	<w1> <w2> ... <wn>
+      [ <n> timeconstants
+	<t1> <t2> ... <tn> ]
+
+Network descriptor files (.net) have the following format:
+
+	<n> units
+	<n> inputs
+	<u>^n
+	<n> outputs
+	<u>^n
+	<n> conns
+	(<u1> <u2>)^n
+      [ : <n> equivalences
+	(<m> <l>^m)^n ]
+      [ t
+	<transfer-function>^n ]
+
+
+Environment descriptor files (.env) have the following format:
+
+	<n> inputs
+	<n> outputs
+	<n> patterns
+	<patt>^n
+      [ : <m> extrasteps
+        ( t=<t>
+	  <patt>^n )^m ]
+
+    where <patt> can take one of two forms
+
+	<r>^n
+	: ( <r> | ?<r> )^inputs ( <r> | * )^outputs
+	: ( <r> | ?<r> )^(inputs+outputs)
+
+State files have the following format:
+
+	<n> units
+	<m> patterns
+	(<r>^n)^m
+
